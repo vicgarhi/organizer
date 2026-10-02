@@ -1,0 +1,74 @@
+name: ${COMPOSE_PROJECT_NAME:-enorden}
+services:
+  organizer:
+    image: enorden-app:local
+    build:
+      context: .
+      args:
+        INSTALL_OFFLINE: ${INSTALL_OFFLINE:-false}
+    restart: unless-stopped
+    init: true
+    expose:
+      - "8000"
+    volumes:
+      - organizer-data:/data
+    env_file: .env
+    environment:
+      DATA_DIR: /data
+      COOKIE_SECURE: ${COOKIE_SECURE:-false}
+    security_opt:
+      - no-new-privileges:true
+    cap_drop:
+      - ALL
+    read_only: true
+    tmpfs:
+      - /tmp:size=64m,mode=1777
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8000/api/health', timeout=3)"]
+      interval: 30s
+      timeout: 5s
+      start_period: 15s
+      retries: 3
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "3"
+  caddy:
+    image: ${CADDY_IMAGE:-caddy:2.10.2-alpine}
+    restart: unless-stopped
+    depends_on:
+      organizer:
+        condition: service_healthy
+    ports:
+      - "${HTTP_PORT:-80}:80"
+      - "${HTTPS_PORT:-443}:443"
+    environment:
+      APP_ADDRESS: ${APP_ADDRESS:-:80}
+    volumes:
+      - ./${CADDY_CONFIG:-deploy/Caddyfile}:/etc/caddy/Caddyfile:ro
+      - caddy-data:/data
+      - caddy-config:/config
+    security_opt:
+      - no-new-privileges:true
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "3"
+  storage:
+    profiles: ["tools"]
+    image: enorden-app:local
+    user: "0:0"
+    entrypoint: ["python", "/app/scripts/storage.py"]
+    network_mode: none
+    volumes:
+      - organizer-data:/data
+      - caddy-data:/proxydata
+    read_only: true
+    security_opt:
+      - no-new-privileges:true
+volumes:
+  organizer-data:
+  caddy-data:
+  caddy-config:

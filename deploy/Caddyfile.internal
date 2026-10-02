@@ -1,0 +1,11 @@
+{$APP_ADDRESS} {
+	# Private CA. Its root certificate must be trusted on every client device.
+	tls internal
+	reverse_proxy organizer:8000
+	request_body {
+		max_size 110MB
+	}
+	header {
+		-Server
+	}
+}

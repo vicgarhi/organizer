@@ -1,0 +1,3 @@
+// No private data is cached. Push works independently of an open page.
+self.addEventListener('push',event=>{let data={title:'En orden',body:'Tienes un recordatorio pendiente.'};try{Object.assign(data,event.data.json())}catch{}event.waitUntil(self.registration.showNotification(data.title,{body:data.body,icon:'/icon.svg',tag:'en-orden-'+data.body,data:{url:'/'}}))});
+self.addEventListener('notificationclick',event=>{event.notification.close();event.waitUntil(clients.matchAll({type:'window',includeUncontrolled:true}).then(list=>{for(const client of list){if(client.url.startsWith(self.location.origin))return client.focus()}return clients.openWindow('/')}))});

@@ -1,0 +1,11 @@
+.venv/
+.data/
+__pycache__/
+*.pyc
+.env
+node_modules/
+test-results/
+backups/
+dist/
+deploy/wheels/*
+!deploy/wheels/.keep

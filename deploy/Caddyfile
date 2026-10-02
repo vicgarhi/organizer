@@ -1,0 +1,10 @@
+{$APP_ADDRESS} {
+	# Plain HTTP when APP_ADDRESS=:80; automatic public TLS for a domain.
+	reverse_proxy organizer:8000
+	request_body {
+		max_size 110MB
+	}
+	header {
+		-Server
+	}
+}
